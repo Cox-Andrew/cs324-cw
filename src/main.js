@@ -31,7 +31,7 @@ let prevTime = performance.now();
 const velocity = new THREE.Vector3();
 const direction = new THREE.Vector3();
 const vertex = new THREE.Vector3();
-const color = new THREE.Color();
+// const color = new THREE.Color();
 
 init();
 animate();
@@ -162,17 +162,16 @@ function init() {
     }
 
     groundGeometry = groundGeometry.toNonIndexed(); // ensure each face has unique vertices
-    position = groundGeometry.attributes.position;
 
     // Generate random ground colors through the use of vertex colours
-    const groundColors = [];
-    for ( let i = 0, l = position.count; i < l; i ++ ) {
-        color.setHSL( Math.random() * 0.3 + 0.5, 0.75, Math.random() * 0.25 + 0.75 );
-        groundColors.push( color.r, color.g, color.b );
-    }
-
-    groundGeometry.setAttribute('color', new THREE.Float32BufferAttribute(groundColors, 3));
-    const groundMaterial = new THREE.MeshBasicMaterial({ vertexColors: true });
+    // position = groundGeometry.attributes.position;
+    // const groundColors = [];
+    // for ( let i = 0, l = position.count; i < l; i ++ ) {
+    //     groundColors.push(130 / 255, 150 / 255, 59 / 255);
+    // }
+    //
+    // groundGeometry.setAttribute('color', new THREE.Float32BufferAttribute(groundColors, 3));
+    const groundMaterial = new THREE.MeshBasicMaterial({color: GROUND_COLOR});
 
     // Add ground to scene
     const ground = new THREE.Mesh(groundGeometry, groundMaterial);
