@@ -184,43 +184,23 @@ function init() {
 
     // Add ground to scene
     const ground = new THREE.Mesh(groundGeometry, groundMaterial);
+    ground.receiveShadow = true;
     scene.add(ground);
 
-    // Boxes
-    const boxGeometry = new THREE.BoxGeometry( 20, 20, 20 ).toNonIndexed();
+    const cubeSize = 4;
+    const cubeGeo = new THREE.BoxGeometry(4, 4, 4);
+    const cubeMat = new THREE.MeshBasicMaterial({color: '#8AC'});
+    const cubeMesh = new THREE.Mesh(cubeGeo, cubeMat);
+    cubeMesh.castShadow = true;
+    cubeMesh.receiveShadow = true;
+    cubeMesh.position.set(cubeSize, 10, cubeSize);
+    scene.add(cubeMesh);
 
-    position = boxGeometry.attributes.position;
-    const colorsBox = [];
-
-    for ( let i = 0, l = position.count; i < l; i ++ ) {
-
-        color.setHSL( Math.random() * 0.3 + 0.5, 0.75, Math.random() * 0.25 + 0.75 );
-        colorsBox.push( color.r, color.g, color.b );
-
-    }
-
-    boxGeometry.setAttribute( 'color', new THREE.Float32BufferAttribute( colorsBox, 3 ) );
-
-    for ( let i = 0; i < 500; i ++ ) {
-
-        const boxMaterial = new THREE.MeshPhongMaterial( { specular: 0xffffff, flatShading: true, vertexColors: true } );
-        boxMaterial.color.setHSL( Math.random() * 0.2 + 0.5, 0.75, Math.random() * 0.25 + 0.75 );
-
-        const box = new THREE.Mesh( boxGeometry, boxMaterial );
-        box.position.x = Math.floor( Math.random() * 20 - 10 ) * 20;
-        box.position.y = Math.floor( Math.random() * 20 ) * 20 + 10;
-        box.position.z = Math.floor( Math.random() * 20 - 10 ) * 20;
-
-        scene.add( box );
-        objects.push( box );
-
-    }
-
-    //
-
-    renderer = new THREE.WebGLRenderer( { antialias: true } );
-    renderer.setPixelRatio( window.devicePixelRatio );
-    renderer.setSize( window.innerWidth, window.innerHeight );
+    // Init renderer
+    renderer = new THREE.WebGLRenderer({antialias: true});
+    renderer.shadowMap.enabled = true;
+    renderer.setPixelRatio(window.devicePixelRatio);
+    renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.domElement.id = "gl-canvas";
     document.body.appendChild(renderer.domElement);
 
