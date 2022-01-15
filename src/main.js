@@ -56,9 +56,18 @@ function init() {
     scene.background = new THREE.CubeTextureLoader().load(skyboxURLs);
 
     // Add light sources
-    const light = new THREE.HemisphereLight(HEM_SKY_COLOR, HEM_GROUND_COLOR, HEM_INTENSITY);
-    light.position.set( 0.5, 1, 0.75 );
-    scene.add( light );
+    const hemisphereLight = new THREE.HemisphereLight(HEM_SKY_COLOR, HEM_GROUND_COLOR, HEM_INTENSITY);
+    scene.add(hemisphereLight);
+
+    const hemisphereLightHelper = new THREE.HemisphereLightHelper(hemisphereLight, 10);
+    scene.add(hemisphereLightHelper);
+
+    const directionalLight = new THREE.DirectionalLight(SUN_COLOR, SUN_INTENSITY);
+    directionalLight.position.set(0, 100, 0);
+    scene.add(directionalLight);
+
+    const directionalLightHelper = new THREE.DirectionalLightHelper(directionalLight, 10);
+    scene.add(directionalLightHelper);
 
     // Init controls
     controls = new PointerLockControls(camera, document.body);
