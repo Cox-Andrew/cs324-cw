@@ -65,8 +65,8 @@ function init() {
     scene.add(controls.getObject());
 
     // Init pointer lock/unlock listeners
-    const blocker = document.getElementById( 'blocker' );
-    const instructions = document.getElementById( 'instructions' );
+    const blocker = document.getElementById('blocker');
+    const instructions = document.getElementById('instructions');
 
     instructions.addEventListener('click', function () {
         controls.lock();
@@ -142,14 +142,15 @@ function init() {
     // Init raycaster for collision detection
     raycaster = new THREE.Raycaster(new THREE.Vector3(), new THREE.Vector3(0, - 1, 0), 0, 10 );
 
-    // Create ground
+    // Create a subdivided plane for the ground
     let groundGeometry = new THREE.PlaneGeometry(2000, 2000, 100, 100);
     groundGeometry.rotateX(-Math.PI / 2);
 
-    // TODO: NOT SURE WHAT THIS IS DOING
-    // vertex displacement
+    // Randomly displace all the vertices on the plane to create texture
+    // Select position buffer of all vertex positions in plane
     let position = groundGeometry.attributes.position;
 
+    // Iterate over vertices in plane and displace
     for (let i = 0, l = position.count; i < l; i ++) {
         vertex.fromBufferAttribute(position, i);
 
@@ -157,7 +158,7 @@ function init() {
         vertex.y += Math.random() * 2;
         vertex.z += Math.random() * 20 - 10;
 
-        position.setXYZ( i, vertex.x, vertex.y, vertex.z );
+        position.setXYZ(i, vertex.x, vertex.y, vertex.z);
     }
 
     groundGeometry = groundGeometry.toNonIndexed(); // ensure each face has unique vertices
@@ -213,77 +214,64 @@ function init() {
     renderer.setPixelRatio( window.devicePixelRatio );
     renderer.setSize( window.innerWidth, window.innerHeight );
     renderer.domElement.id = "gl-canvas";
-    document.body.appendChild( renderer.domElement );
-
-    //
+    document.body.appendChild(renderer.domElement);
 
     window.addEventListener( 'resize', onWindowResize );
-
 }
 
 function onWindowResize() {
-
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
 
     renderer.setSize( window.innerWidth, window.innerHeight );
-
 }
 
 function animate() {
-
-    requestAnimationFrame( animate );
+    requestAnimationFrame(animate);
 
     const time = performance.now();
 
-    if ( controls.isLocked === true ) {
-
-        raycaster.ray.origin.copy( controls.getObject().position );
+    if (controls.isLocked === true) {
+        raycaster.ray.origin.copy(controls.getObject().position);
         raycaster.ray.origin.y -= 10;
 
-        const intersections = raycaster.intersectObjects( objects, false );
+        const intersections = raycaster.intersectObjects(objects, false);
 
         const onObject = intersections.length > 0;
 
-        const delta = ( time - prevTime ) / 1000;
+        const delta = (time - prevTime) / 1000;
 
         velocity.x -= velocity.x * 10.0 * delta;
         velocity.z -= velocity.z * 10.0 * delta;
 
         velocity.y -= 9.8 * 100.0 * delta; // 100.0 = mass
 
-        direction.z = Number( moveForward ) - Number( moveBackward );
-        direction.x = Number( moveRight ) - Number( moveLeft );
+        direction.z = Number(moveForward) - Number(moveBackward);
+        direction.x = Number(moveRight) - Number(moveLeft);
         direction.normalize(); // this ensures consistent movements in all directions
 
-        if ( moveForward || moveBackward ) velocity.z -= direction.z * 400.0 * delta;
-        if ( moveLeft || moveRight ) velocity.x -= direction.x * 400.0 * delta;
+        if (moveForward || moveBackward) velocity.z -= direction.z * 400.0 * delta;
+        if (moveLeft || moveRight) velocity.x -= direction.x * 400.0 * delta;
 
-        if ( onObject === true ) {
-
-            velocity.y = Math.max( 0, velocity.y );
+        if (onObject === true) {
+            velocity.y = Math.max(0, velocity.y);
             canJump = true;
-
         }
 
-        controls.moveRight( - velocity.x * delta );
-        controls.moveForward( - velocity.z * delta );
+        controls.moveRight(-velocity.x * delta);
+        controls.moveForward(-velocity.z * delta);
 
-        controls.getObject().position.y += ( velocity.y * delta ); // new behavior
+        controls.getObject().position.y += (velocity.y * delta); // new behavior
 
-        if ( controls.getObject().position.y < 10 ) {
-
+        if (controls.getObject().position.y < 10) {
             velocity.y = 0;
             controls.getObject().position.y = 10;
 
             canJump = true;
-
         }
-
     }
 
     prevTime = time;
 
-    renderer.render( scene, camera );
-
+    renderer.render(scene, camera);
 }
