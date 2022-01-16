@@ -62,14 +62,30 @@ function init() {
 
     // Add light sources
     const hemisphereLight = new THREE.HemisphereLight(HEM_SKY_COLOR, HEM_GROUND_COLOR, HEM_INTENSITY);
+    hemisphereLight.position.set(0, 1, 0);
     scene.add(hemisphereLight);
 
     const hemisphereLightHelper = new THREE.HemisphereLightHelper(hemisphereLight, 10);
     scene.add(hemisphereLightHelper);
 
     const directionalLight = new THREE.DirectionalLight(SUN_COLOR, SUN_INTENSITY);
-    directionalLight.position.set(0, 100, 0);
+    directionalLight.position.set(- 1, 1.75, 1);
+    directionalLight.position.multiplyScalar(30);
     scene.add(directionalLight);
+
+    directionalLight.castShadow = true;
+    directionalLight.shadow.mapSize.width = 2048;
+    directionalLight.shadow.mapSize.height = 2048;
+
+    const d = 50;
+
+    directionalLight.shadow.camera.left = - d;
+    directionalLight.shadow.camera.right = d;
+    directionalLight.shadow.camera.top = d;
+    directionalLight.shadow.camera.bottom = - d;
+
+    directionalLight.shadow.camera.far = 3500;
+    directionalLight.shadow.bias = - 0.0001;
 
     const directionalLightHelper = new THREE.DirectionalLightHelper(directionalLight, 10);
     scene.add(directionalLightHelper);
@@ -169,7 +185,7 @@ function init() {
         vertex.fromBufferAttribute(position, i);
 
         vertex.x += Math.random() * 20 - 10;
-        vertex.y += Math.random() * 2;
+        vertex.y += Math.random() * 5;
         vertex.z += Math.random() * 20 - 10;
 
         position.setXYZ(i, vertex.x, vertex.y, vertex.z);
@@ -185,21 +201,22 @@ function init() {
     // }
     //
     // groundGeometry.setAttribute('color', new THREE.Float32BufferAttribute(groundColors, 3));
-    const groundMaterial = new THREE.MeshBasicMaterial({color: GROUND_COLOR});
+    const groundMaterial = new THREE.MeshLambertMaterial({color: GROUND_COLOR});
 
     // Add ground to scene
     const ground = new THREE.Mesh(groundGeometry, groundMaterial);
     ground.receiveShadow = true;
+    ground.castShadow = true;
     scene.add(ground);
 
-    const cubeSize = 4;
-    const cubeGeo = new THREE.BoxGeometry(4, 4, 4);
-    const cubeMat = new THREE.MeshBasicMaterial({color: '#8AC'});
+    const cubeGeo = new THREE.BoxGeometry(10, 30, 10);
+    const cubeMat = new THREE.MeshLambertMaterial({color: '#ffffff'});
     const cubeMesh = new THREE.Mesh(cubeGeo, cubeMat);
     cubeMesh.castShadow = true;
     cubeMesh.receiveShadow = true;
-    cubeMesh.position.set(cubeSize, 10, cubeSize);
+    cubeMesh.position.set(-3, 10, 3);
     scene.add(cubeMesh);
+    objects.push(cubeMesh);
 
     // Init renderer
     renderer = new THREE.WebGLRenderer({antialias: true});
@@ -224,6 +241,7 @@ function animate() {
 
     const time = performance.now();
 
+    // Physics are based on PointerLockControls example
     if (controls.isLocked === true) {
         raycaster.ray.origin.copy(controls.getObject().position);
         raycaster.ray.origin.y -= 10;
