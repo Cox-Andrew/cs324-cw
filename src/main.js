@@ -1,19 +1,24 @@
 import * as THREE from '../three/build/three.module.js';
 import {PointerLockControls} from '../three/examples/jsm/controls/PointerLockControls.js';
 
-const FOV = 75;
+const CAMERA_FOV = 75;
 const CAMERA_NEAR = 0.1;
 const CAMERA_FAR = 1000;
+
 const FOG_COLOR = '#ffffff';
 const FOG_NEAR = 1;
 const FOG_FAR = 800;
+
 const HEM_SKY_COLOR = '#bde6ff';
 const HEM_GROUND_COLOR = '#82aa14';
-const HEM_INTENSITY = 0.5;
-const JUMP_VELOCITY = 350;
+const HEM_INTENSITY = 0.6;
+
 const GROUND_COLOR = '#82aa14';
+
 const SUN_COLOR = '#fdfbd3';
-const SUN_INTENSITY = 0.8;
+const SUN_INTENSITY = 1;
+
+const JUMP_VELOCITY = 350;
 
 let camera, scene, renderer, controls;
 
@@ -38,7 +43,7 @@ animate();
 
 function init() {
     // Setup camera
-    camera = new THREE.PerspectiveCamera(FOV, window.innerWidth / window.innerHeight, CAMERA_NEAR, CAMERA_FAR);
+    camera = new THREE.PerspectiveCamera(CAMERA_FOV, window.innerWidth / window.innerHeight, CAMERA_NEAR, CAMERA_FAR);
     camera.position.y = 10;
 
     // Setup scene
