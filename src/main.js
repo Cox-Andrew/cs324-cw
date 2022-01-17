@@ -19,12 +19,13 @@ const SUN_COLOR = '#fdfbd3';
 const SUN_INTENSITY = 1;
 
 const JUMP_VELOCITY = 350;
+const GRAVITY = 9.8;
 
 let camera, scene, renderer, controls;
 
 const objects = [];
 
-let raycaster;
+let jumpRaycaster;
 
 let moveForward = false;
 let moveBackward = false;
@@ -69,8 +70,8 @@ function init() {
     scene.add(hemisphereLightHelper);
 
     const directionalLight = new THREE.DirectionalLight(SUN_COLOR, SUN_INTENSITY);
-    directionalLight.position.set(- 1, 1.75, 1);
-    directionalLight.position.multiplyScalar(30);
+    directionalLight.position.set(- 1, 0.75, 1);
+    directionalLight.position.multiplyScalar(300);
     scene.add(directionalLight);
 
     directionalLight.castShadow = true;
@@ -169,8 +170,9 @@ function init() {
     document.addEventListener( 'keydown', onKeyDown );
     document.addEventListener( 'keyup', onKeyUp );
 
-    // Init raycaster for collision detection
-    raycaster = new THREE.Raycaster(new THREE.Vector3(), new THREE.Vector3(0, - 1, 0), 0, 10 );
+    // Init raycaster for jump collision detection
+    // Ray is directed straight down
+    jumpRaycaster = new THREE.Raycaster(new THREE.Vector3(), new THREE.Vector3(0, - 1, 0), 0, 1);
 
     // Create a subdivided plane for the ground
     let groundGeometry = new THREE.PlaneGeometry(2000, 2000, 100, 100);
@@ -209,6 +211,7 @@ function init() {
     ground.castShadow = true;
     scene.add(ground);
 
+    // Add box
     const cubeGeo = new THREE.BoxGeometry(10, 30, 10);
     const cubeMat = new THREE.MeshLambertMaterial({color: '#ffffff'});
     const cubeMesh = new THREE.Mesh(cubeGeo, cubeMat);
@@ -217,6 +220,9 @@ function init() {
     cubeMesh.position.set(-3, 10, 3);
     scene.add(cubeMesh);
     objects.push(cubeMesh);
+
+    // TODO: Load tree models
+
 
     // Init renderer
     renderer = new THREE.WebGLRenderer({antialias: true});
@@ -243,19 +249,21 @@ function animate() {
 
     // Physics are based on PointerLockControls example
     if (controls.isLocked === true) {
-        raycaster.ray.origin.copy(controls.getObject().position);
-        raycaster.ray.origin.y -= 10;
-
-        const intersections = raycaster.intersectObjects(objects, false);
-
+        jumpRaycaster.ray.origin.copy(controls.getObject().position);
+        // Shift ray origin to feet
+        jumpRaycaster.ray.origin.y -= 10;
+        // Check for intersections with objects from list
+        const intersections = jumpRaycaster.intersectObjects(objects, false);
+        // If any intersections, we are on object
         const onObject = intersections.length > 0;
 
         const delta = (time - prevTime) / 1000;
 
+        // friction
         velocity.x -= velocity.x * 10.0 * delta;
         velocity.z -= velocity.z * 10.0 * delta;
 
-        velocity.y -= 9.8 * 100.0 * delta; // 100.0 = mass
+        velocity.y -= GRAVITY * 100.0 * delta; // 100.0 = mass
 
         direction.z = Number(moveForward) - Number(moveBackward);
         direction.x = Number(moveRight) - Number(moveLeft);
