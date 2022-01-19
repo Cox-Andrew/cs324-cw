@@ -1,5 +1,5 @@
 import * as THREE from '../three/build/three.module.js';
-import {PointerLockControls} from '../three/examples/jsm/controls/PointerLockControls.js';
+import {PointerLockControls} from './PointerLockControlsFix.js';
 
 const CAMERA_FOV = 75;
 const CAMERA_NEAR = 0.1;
