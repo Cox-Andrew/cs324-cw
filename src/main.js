@@ -2,7 +2,7 @@ import * as THREE from '../three/build/three.module.js';
 import {PointerLockControls} from './PointerLockControlsFix.js';
 import Stats from '../three/examples/jsm/libs/stats.module.js';
 
-const CAMERA_FOV = 75;
+const CAMERA_FOV = 70;
 const CAMERA_NEAR = 0.1;
 const CAMERA_FAR = 1000;
 
