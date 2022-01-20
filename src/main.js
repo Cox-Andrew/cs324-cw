@@ -18,9 +18,13 @@ const GROUND_COLOR = '#82aa14';
 
 const SUN_COLOR = '#fdfbd3';
 const SUN_INTENSITY = 1;
+const SUN_FAR = 1000;
 
-const JUMP_VELOCITY = 350;
+const JUMP_VELOCITY = 4;
 const GRAVITY = 9.8;
+const PLAYER_HEIGHT = 1.8;
+const FRICTION = 5;
+const ACCELERATION = 20;
 
 let camera, scene, renderer, controls, stats;
 
@@ -46,7 +50,7 @@ animate();
 function init() {
     // Setup camera
     camera = new THREE.PerspectiveCamera(CAMERA_FOV, window.innerWidth / window.innerHeight, CAMERA_NEAR, CAMERA_FAR);
-    camera.position.y = 10;
+    camera.position.y = PLAYER_HEIGHT;
 
     // Setup scene
     scene = new THREE.Scene();
@@ -63,37 +67,40 @@ function init() {
     scene.background = new THREE.CubeTextureLoader().load(skyboxURLs);
 
     // Add light sources
+    // Position of hemisphereLight is irrelevant - only +/- the axis affects ground vs sky
     const hemisphereLight = new THREE.HemisphereLight(HEM_SKY_COLOR, HEM_GROUND_COLOR, HEM_INTENSITY);
-    hemisphereLight.position.set(0, 1, 0);
+    hemisphereLight.position.set(0, 2, 0);
     scene.add(hemisphereLight);
 
-    const hemisphereLightHelper = new THREE.HemisphereLightHelper(hemisphereLight, 10);
+    const hemisphereLightHelper = new THREE.HemisphereLightHelper(hemisphereLight);
     scene.add(hemisphereLightHelper);
 
-    const directionalLight = new THREE.DirectionalLight(SUN_COLOR, SUN_INTENSITY);
-    directionalLight.position.set(- 1, 0.75, 1);
-    directionalLight.position.multiplyScalar(300);
-    scene.add(directionalLight);
+    // Direction affects shadow direction, position affects centre of shadow map => where it gets clipped
+    const sunLight = new THREE.DirectionalLight(SUN_COLOR, SUN_INTENSITY);
+    sunLight.position.set(1, 0.75, 0.6);
+    sunLight.position.multiplyScalar(5);
+    scene.add(sunLight);
 
-    directionalLight.castShadow = true;
-    directionalLight.shadow.mapSize.width = 2048;
-    directionalLight.shadow.mapSize.height = 2048;
+    sunLight.castShadow = true;
+    sunLight.shadow.mapSize.width = 4096;
+    sunLight.shadow.mapSize.height = 4096;
 
     const d = 50;
 
-    directionalLight.shadow.camera.left = - d;
-    directionalLight.shadow.camera.right = d;
-    directionalLight.shadow.camera.top = d;
-    directionalLight.shadow.camera.bottom = - d;
+    sunLight.shadow.camera.left = - d;
+    sunLight.shadow.camera.right = d;
+    sunLight.shadow.camera.top = d;
+    sunLight.shadow.camera.bottom = - d;
 
-    directionalLight.shadow.camera.far = 3500;
-    directionalLight.shadow.bias = - 0.0001;
+    sunLight.shadow.camera.far = SUN_FAR;
+    sunLight.shadow.bias = - 0.0001;
 
-    const directionalLightHelper = new THREE.DirectionalLightHelper(directionalLight, 10);
+    const directionalLightHelper = new THREE.DirectionalLightHelper(sunLight);
     scene.add(directionalLightHelper);
 
     // Init controls
     controls = new PointerLockControls(camera, document.body);
+    // TODO: check - think this just adds camera, getObject is depreciated
     scene.add(controls.getObject());
 
     // Init pointer lock/unlock listeners
@@ -176,25 +183,25 @@ function init() {
     jumpRaycaster = new THREE.Raycaster(new THREE.Vector3(), new THREE.Vector3(0, - 1, 0), 0, 1);
 
     // Create a subdivided plane for the ground
-    let groundGeometry = new THREE.PlaneGeometry(2000, 2000, 100, 100);
+    let groundGeometry = new THREE.PlaneGeometry(2000, 2000);
     groundGeometry.rotateX(-Math.PI / 2);
-
-    // Randomly displace all the vertices on the plane to create texture
-    // Select position buffer of all vertex positions in plane
-    let position = groundGeometry.attributes.position;
-
-    // Iterate over vertices in plane and displace
-    for (let i = 0, l = position.count; i < l; i ++) {
-        vertex.fromBufferAttribute(position, i);
-
-        vertex.x += Math.random() * 20 - 10;
-        vertex.y += Math.random() * 5;
-        vertex.z += Math.random() * 20 - 10;
-
-        position.setXYZ(i, vertex.x, vertex.y, vertex.z);
-    }
-
-    groundGeometry = groundGeometry.toNonIndexed(); // ensure each face has unique vertices
+    //
+    // // Randomly displace all the vertices on the plane to create texture
+    // // Select position buffer of all vertex positions in plane
+    // let position = groundGeometry.attributes.position;
+    //
+    // // Iterate over vertices in plane and displace
+    // for (let i = 0, l = position.count; i < l; i ++) {
+    //     vertex.fromBufferAttribute(position, i);
+    //
+    //     vertex.x += Math.random() * 20 - 10;
+    //     vertex.y += Math.random() * 2;
+    //     vertex.z += Math.random() * 20 - 10;
+    //
+    //     position.setXYZ(i, vertex.x, vertex.y, vertex.z);
+    // }
+    //
+    // groundGeometry = groundGeometry.toNonIndexed(); // ensure each face has unique vertices
 
     // Generate random ground colors through the use of vertex colours
     // position = groundGeometry.attributes.position;
@@ -213,12 +220,12 @@ function init() {
     scene.add(ground);
 
     // Add box
-    const cubeGeo = new THREE.BoxGeometry(10, 30, 10);
-    const cubeMat = new THREE.MeshLambertMaterial({color: '#ffffff'});
+    const cubeGeo = new THREE.BoxGeometry(2, 2, 2);
+    const cubeMat = new THREE.MeshStandardMaterial({color: '#ffffff'});
     const cubeMesh = new THREE.Mesh(cubeGeo, cubeMat);
     cubeMesh.castShadow = true;
     cubeMesh.receiveShadow = true;
-    cubeMesh.position.set(-3, 10, 3);
+    cubeMesh.position.set(3, 2, 3);
     scene.add(cubeMesh);
     objects.push(cubeMesh);
 
@@ -255,30 +262,30 @@ function animate() {
     if (controls.isLocked === true) {
         jumpRaycaster.ray.origin.copy(controls.getObject().position);
         // Shift ray origin to feet
-        jumpRaycaster.ray.origin.y -= 10;
+        jumpRaycaster.ray.origin.y -= PLAYER_HEIGHT;
         // Check for intersections with objects from list
-        const intersections = jumpRaycaster.intersectObjects(objects, false);
+        const intersections = jumpRaycaster.intersectObjects(scene.children, false);
         // If any intersections, we are on object
         const onObject = intersections.length > 0;
 
         const delta = (time - prevTime) / 1000;
 
         // friction
-        velocity.x -= velocity.x * 10.0 * delta;
-        velocity.z -= velocity.z * 10.0 * delta;
-
-        velocity.y -= GRAVITY * 100.0 * delta; // 100.0 = mass
+        velocity.x -= velocity.x * FRICTION * delta;
+        velocity.z -= velocity.z * FRICTION * delta;
 
         direction.z = Number(moveForward) - Number(moveBackward);
         direction.x = Number(moveRight) - Number(moveLeft);
         direction.normalize(); // this ensures consistent movements in all directions
 
-        if (moveForward || moveBackward) velocity.z -= direction.z * 400.0 * delta;
-        if (moveLeft || moveRight) velocity.x -= direction.x * 400.0 * delta;
+        if (moveForward || moveBackward) velocity.z -= direction.z * ACCELERATION * delta;
+        if (moveLeft || moveRight) velocity.x -= direction.x * ACCELERATION * delta;
 
         if (onObject === true) {
             velocity.y = Math.max(0, velocity.y);
             canJump = true;
+        } else {
+            velocity.y -= GRAVITY * delta;
         }
 
         controls.moveRight(-velocity.x * delta);
@@ -286,9 +293,9 @@ function animate() {
 
         controls.getObject().position.y += (velocity.y * delta); // new behavior
 
-        if (controls.getObject().position.y < 10) {
+        if (controls.getObject().position.y < PLAYER_HEIGHT) {
             velocity.y = 0;
-            controls.getObject().position.y = 10;
+            controls.getObject().position.y = PLAYER_HEIGHT;
 
             canJump = true;
         }
