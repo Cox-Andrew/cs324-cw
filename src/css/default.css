@@ -1,6 +1,7 @@
 body {
     margin: 0;
     overflow: hidden;
+    font-family: 'Open Sans', monospace;
 }
 
 #blocker {
@@ -22,4 +23,19 @@ body {
     text-align: center;
     font-size: 14px;
     cursor: pointer;
+}
+
+#overlay {
+    user-select: none;
+    z-index: 1;
+}
+
+#score {
+    position: absolute;
+    top: 0;
+    width: 100%;
+    padding: 10px;
+    box-sizing: border-box;
+    text-align: center;
+    font-size: xxx-large;
 }

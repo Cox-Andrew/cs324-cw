@@ -28,9 +28,9 @@ const ACCELERATION = 20;
 
 let camera, scene, renderer, controls, stats;
 
-const objects = [];
+const targets = [];
 
-let jumpRaycaster;
+let jumpRaycaster, arrowRaycaster;
 
 let moveForward = false;
 let moveBackward = false;
@@ -124,66 +124,15 @@ function init() {
         instructions.style.display = '';
     });
 
-    // Add movement control listeners
-    const onKeyDown = function (event) {
-        switch (event.code) {
-            case 'ArrowUp':
-            case 'KeyW':
-                moveForward = true;
-                break;
-
-            case 'ArrowLeft':
-            case 'KeyA':
-                moveLeft = true;
-                break;
-
-            case 'ArrowDown':
-            case 'KeyS':
-                moveBackward = true;
-                break;
-
-            case 'ArrowRight':
-            case 'KeyD':
-                moveRight = true;
-                break;
-
-            case 'Space':
-                if (canJump === true) velocity.y += JUMP_VELOCITY;
-                canJump = false;
-                break;
-        }
-    };
-
-    const onKeyUp = function (event) {
-        switch (event.code) {
-            case 'ArrowUp':
-            case 'KeyW':
-                moveForward = false;
-                break;
-
-            case 'ArrowLeft':
-            case 'KeyA':
-                moveLeft = false;
-                break;
-
-            case 'ArrowDown':
-            case 'KeyS':
-                moveBackward = false;
-                break;
-
-            case 'ArrowRight':
-            case 'KeyD':
-                moveRight = false;
-                break;
-        }
-    };
-
     document.addEventListener( 'keydown', onKeyDown );
     document.addEventListener( 'keyup', onKeyUp );
 
     // Init raycaster for jump collision detection
     // Ray is directed straight down
     jumpRaycaster = new THREE.Raycaster(new THREE.Vector3(), new THREE.Vector3(0, - 1, 0), 0, 1);
+
+    // Arrow raycaster
+    arrowRaycaster = new THREE.Raycaster();
 
     // Create a subdivided plane for the ground
     let groundGeometry = new THREE.PlaneGeometry(2000, 2000);
@@ -230,7 +179,7 @@ function init() {
     cubeMesh.receiveShadow = true;
     cubeMesh.position.set(3, 2, 3);
     scene.add(cubeMesh);
-    objects.push(cubeMesh);
+    targets.push(cubeMesh);
 
     // TODO: Load tree models
 
@@ -247,7 +196,77 @@ function init() {
     stats = new Stats();
     document.body.appendChild(stats.dom);
 
-    window.addEventListener( 'resize', onWindowResize );
+    window.addEventListener('resize', onWindowResize);
+    window.addEventListener('mousedown', onMouseDown);
+}
+
+// Fire arrow
+function onMouseDown(event) {
+    const tempVec = new THREE.Vector3();
+    arrowRaycaster.set(camera.position, controls.getDirection(tempVec));
+
+    const intersects = arrowRaycaster.intersectObjects(targets, false);
+
+    if (intersects.length > 0) {
+        let target = intersects[0].object;
+        target.visible = false;
+        score++;
+        document.getElementById("score").innerText = score;
+    }
+}
+
+// Add movement control listeners
+function onKeyDown(event) {
+    switch (event.code) {
+        case 'ArrowUp':
+        case 'KeyW':
+            moveForward = true;
+            break;
+
+        case 'ArrowLeft':
+        case 'KeyA':
+            moveLeft = true;
+            break;
+
+        case 'ArrowDown':
+        case 'KeyS':
+            moveBackward = true;
+            break;
+
+        case 'ArrowRight':
+        case 'KeyD':
+            moveRight = true;
+            break;
+
+        case 'Space':
+            if (canJump === true) velocity.y += JUMP_VELOCITY;
+            canJump = false;
+            break;
+    }
+}
+
+function onKeyUp(event) {
+    switch (event.code) {
+        case 'ArrowUp':
+        case 'KeyW':
+            moveForward = false;
+            break;
+
+        case 'ArrowLeft':
+        case 'KeyA':
+            moveLeft = false;
+            break;
+
+        case 'ArrowDown':
+        case 'KeyS':
+            moveBackward = false;
+            break;
+
+        case 'ArrowRight':
+        case 'KeyD':
+            moveRight = false;
+            break;
+    }
 }
 
 function onWindowResize() {
