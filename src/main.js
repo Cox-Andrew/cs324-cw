@@ -1,5 +1,6 @@
 import * as THREE from '../three/build/three.module.js';
 import {PointerLockControls} from './PointerLockControlsFix.js';
+import Stats from '../three/examples/jsm/libs/stats.module.js';
 
 const CAMERA_FOV = 75;
 const CAMERA_NEAR = 0.1;
@@ -21,7 +22,7 @@ const SUN_INTENSITY = 1;
 const JUMP_VELOCITY = 350;
 const GRAVITY = 9.8;
 
-let camera, scene, renderer, controls;
+let camera, scene, renderer, controls, stats;
 
 const objects = [];
 
@@ -231,6 +232,9 @@ function init() {
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.domElement.id = "gl-canvas";
     document.body.appendChild(renderer.domElement);
+
+    stats = new Stats();
+    document.body.appendChild(stats.dom);
 
     window.addEventListener( 'resize', onWindowResize );
 }
