@@ -38,11 +38,14 @@ let moveLeft = false;
 let moveRight = false;
 let canJump = false;
 
-let prevTime = performance.now();
+let score = 0;
+
 const velocity = new THREE.Vector3();
 const direction = new THREE.Vector3();
 const vertex = new THREE.Vector3();
 // const color = new THREE.Color();
+
+const clock = new THREE.Clock();
 
 init();
 animate();
@@ -257,10 +260,10 @@ function onWindowResize() {
 function animate() {
     requestAnimationFrame(animate);
 
-    const time = performance.now();
-
     // Physics are based on PointerLockControls example
     if (controls.isLocked === true) {
+        const delta = clock.getDelta();
+
         jumpRaycaster.ray.origin.copy(controls.getObject().position);
         // Shift ray origin to feet
         jumpRaycaster.ray.origin.y -= PLAYER_HEIGHT;
@@ -268,8 +271,6 @@ function animate() {
         const intersections = jumpRaycaster.intersectObjects(scene.children, false);
         // If any intersections, we are on object
         const onObject = intersections.length > 0;
-
-        const delta = (time - prevTime) / 1000;
 
         // friction
         velocity.x -= velocity.x * FRICTION * delta;
@@ -301,8 +302,6 @@ function animate() {
             canJump = true;
         }
     }
-
-    prevTime = time;
 
     renderer.render(scene, camera);
 
