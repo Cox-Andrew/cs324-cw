@@ -1,6 +1,7 @@
 import * as THREE from '../three/build/three.module.js';
 import {PointerLockControls} from './PointerLockControlsFix.js';
 import Stats from '../three/examples/jsm/libs/stats.module.js';
+import {GLTFLoader} from '../three/examples/jsm/loaders/GLTFLoader.js';
 
 const CAMERA_FOV = 70;
 const CAMERA_NEAR = 0.1;
@@ -12,7 +13,7 @@ const FOG_FAR = 800;
 
 const HEM_SKY_COLOR = '#bde6ff';
 const HEM_GROUND_COLOR = '#82aa14';
-const HEM_INTENSITY = 0.6;
+const HEM_INTENSITY = 0.8;
 
 const GROUND_COLOR = '#82aa14';
 
@@ -182,6 +183,25 @@ function init() {
     targets.push(cubeMesh);
 
     // TODO: Load tree models
+    // CommonTree_Autumn_1.blend -5
+    // BirchTree_Autumn_1.blend -5
+    // Willow_Autumn_1.blend -5
+    // PineTree_1.blend -5
+
+    const loader = new GLTFLoader();
+    for (let i = 1; i <= 5; i++) {
+        loader.load( `../resources/low-poly-nature/CommonTree_Autumn_${i}.blend.glb`, (gltf) => {
+            gltf.scene.rotateY(Math.random() * 2 * Math.PI);
+            gltf.scene.scale.multiplyScalar(3);
+            gltf.scene.traverse((node) => {
+                if (node.isMesh) node.castShadow = true;
+            });
+            gltf.scene.translateOnAxis(new THREE.Vector3(Math.random(), 0, Math.random()), 50);
+            scene.add(gltf.scene);
+        }, undefined, (error) => {
+            console.error(error);
+        });
+    }
 
 
     // Init renderer
