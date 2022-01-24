@@ -10,6 +10,10 @@ Textures:
   - https://www.svgrepo.com/svg/384339/back-entrance-exit-logout-quit
   - [Hasyim Ari](https://www.behance.net/_hasyimasari/)
 
+- font
+  - https://en.bestfonts.pro/font/persephone-&-hades
+  - Petros Afshar (London, United Kingdom)
+
 
 ## Specification
 

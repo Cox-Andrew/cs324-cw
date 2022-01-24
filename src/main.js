@@ -86,6 +86,7 @@ function init() {
 
     // Setup stats module (fps count etc.)
     stats = new Stats();
+    stats.dom.id = "stats";
     document.body.appendChild(stats.dom);
 
     // Add light sources
@@ -129,15 +130,34 @@ function init() {
     const blocker = document.getElementById('blocker');
     const pauseMenu = document.getElementById('pause');
     const overlay = document.getElementById('overlay');
+    const splash = document.getElementById('splash');
+    const resumeButton = document.getElementById('resume');
+    const levelSelect = document.getElementById('level-select');
+    const levelSelectButton = document.getElementById('to-level-select');
+    const forestButton = document.getElementById('forest');
+    const desertButton = document.getElementById('desert');
+    const returnButton = document.getElementById('return');
 
-    pauseMenu.addEventListener('click', function () {
-        controls.lock();
-    });
+    levelSelectButton.addEventListener('click', () => {
+        splash.style.display = 'none';
+        levelSelect.style.display = 'flex';
+    })
+
+    returnButton.addEventListener('click', () => {
+        pauseMenu.style.display = 'none';
+        levelSelect.style.display = 'flex';
+    })
+
+    forestButton.addEventListener('click', () => controls.lock());
+    desertButton.addEventListener('click', () => controls.lock());
+    resumeButton.addEventListener('click', () => controls.lock());
 
     controls.addEventListener('lock', function () {
-        pauseMenu.style.display = 'none';
+        levelSelect.style.display = 'none';
+        // pauseMenu.style.display = 'none';
         blocker.style.display = 'none';
         overlay.style.display = 'block';
+        stats.dom.style.display = 'block';
         paused = false;
         clock.start();
         animate();
@@ -145,8 +165,9 @@ function init() {
 
     controls.addEventListener('unlock', function () {
         blocker.style.display = 'block';
-        pauseMenu.style.display = '';
+        pauseMenu.style.display = 'flex';
         overlay.style.display = 'none';
+        stats.dom.style.display = 'none';
         paused = true;
         clock.stop();
     });

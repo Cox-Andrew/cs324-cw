@@ -8,11 +8,9 @@ body {
     position: absolute;
     width: 100%;
     height: 100%;
-    background-color: rgba(0,0,0,0.5);
-    backdrop-filter: blur(6px);
 }
 
-#pause {
+#splash {
     width: 100%;
     height: 100%;
 
@@ -23,6 +21,45 @@ body {
 
     text-align: center;
     font-size: 14px;
+
+    background: #9dceff;
+}
+
+#level-select {
+    width: 100%;
+    height: 100%;
+
+    /*display: flex;*/
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+
+    text-align: center;
+    font-size: 14px;
+
+    display: none;
+    background: #9dceff;
+}
+
+#pause {
+    width: 100%;
+    height: 100%;
+
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+
+    text-align: center;
+    font-size: 14px;
+
+    display: none;
+
+    background-color: rgba(0,0,0,0.5);
+    backdrop-filter: blur(6px);
+}
+
+#resume {
+    font-size: 36px;
     cursor: pointer;
 }
 
@@ -40,4 +77,28 @@ body {
     box-sizing: border-box;
     text-align: center;
     font-size: xxx-large;
+}
+
+#stats {
+    display: none
+}
+
+#forest {
+    cursor: pointer;
+}
+
+#desert {
+    cursor: pointer;
+}
+
+#return {
+    width: 80px;
+    height: 80px;
+    position: absolute;
+    top: 0;
+    left: 0;
+    margin: 10px;
+    background-image: url("../../resources/exit.svg");
+    background-size: cover;
+    cursor: pointer;
 }
