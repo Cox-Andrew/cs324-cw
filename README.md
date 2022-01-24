@@ -6,6 +6,10 @@
 Textures:
 - skybox
   - Source: labs
+- exit logo
+  - https://www.svgrepo.com/svg/384339/back-entrance-exit-logout-quit
+  - [Hasyim Ari](https://www.behance.net/_hasyimasari/)
+
 
 ## Specification
 
@@ -66,3 +70,7 @@ Textures:
   - bow draw animation
   - animal running animation
   - animal death animation
+
+## Modelling
+
+![image-20220123193630963](C:\Users\valsp\source\repos\cs324-cw\images\image-20220123193630963.png)
