@@ -14,6 +14,13 @@ Textures:
   - https://en.bestfonts.pro/font/persephone-&-hades
   - Petros Afshar (London, United Kingdom)
 
+- rock models
+  - https://assetstore.unity.com/packages/3d/props/exterior/rock-and-boulders-2-6947
+
+- conifers
+  - https://assetstore.unity.com/packages/3d/vegetation/trees/conifers-botd-142076
+
+- unity standard assets https://assetstore.unity.com/packages/essentials/asset-packs/standard-assets-for-unity-2018-4-32351
 
 ## Specification
 
