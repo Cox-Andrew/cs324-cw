@@ -43,10 +43,13 @@ let score = 0;
 
 const velocity = new THREE.Vector3();
 const direction = new THREE.Vector3();
-const vertex = new THREE.Vector3();
+// const vertex = new THREE.Vector3();
 // const color = new THREE.Color();
 
-const clock = new THREE.Clock();
+const clock = new THREE.Clock(false);
+
+let paused = true;
+let activeCube;
 
 init();
 animate();
@@ -69,6 +72,21 @@ function init() {
         '../resources/skybox/south.bmp'
     ];
     scene.background = new THREE.CubeTextureLoader().load(skyboxURLs);
+
+    // Setup renderer
+    renderer = new THREE.WebGLRenderer({antialias: true});
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.physicallyCorrectLights = true;
+    renderer.outputEncoding = THREE.sRGBEncoding;
+    renderer.setPixelRatio(window.devicePixelRatio);
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.domElement.id = "gl-canvas";
+    document.body.appendChild(renderer.domElement);
+
+    // Setup stats module (fps count etc.)
+    stats = new Stats();
+    document.body.appendChild(stats.dom);
 
     // Add light sources
     // Position of hemisphereLight is irrelevant - only +/- the axis affects ground vs sky
@@ -107,26 +125,39 @@ function init() {
     // TODO: check - think this just adds camera, getObject is depreciated
     scene.add(controls.getObject());
 
-    // Init pointer lock/unlock listeners
+    // Setup overlay controls and pointer capture events
     const blocker = document.getElementById('blocker');
-    const instructions = document.getElementById('instructions');
+    const pauseMenu = document.getElementById('pause');
+    const overlay = document.getElementById('overlay');
 
-    instructions.addEventListener('click', function () {
+    pauseMenu.addEventListener('click', function () {
         controls.lock();
     });
 
     controls.addEventListener('lock', function () {
-        instructions.style.display = 'none';
+        pauseMenu.style.display = 'none';
         blocker.style.display = 'none';
+        overlay.style.display = 'block';
+        paused = false;
+        clock.start();
+        animate();
     });
 
     controls.addEventListener('unlock', function () {
         blocker.style.display = 'block';
-        instructions.style.display = '';
+        pauseMenu.style.display = '';
+        overlay.style.display = 'none';
+        paused = true;
+        clock.stop();
     });
 
-    document.addEventListener( 'keydown', onKeyDown );
-    document.addEventListener( 'keyup', onKeyUp );
+    // Register controls listeners
+    document.body.addEventListener('keydown', onKeyDown);
+    document.body.addEventListener('keyup', onKeyUp);
+    document.body.addEventListener('mousedown', onMouseDown);
+
+    // Listen for window resize
+    window.addEventListener('resize', onWindowResize);
 
     // Init raycaster for jump collision detection
     // Ray is directed straight down
@@ -135,10 +166,12 @@ function init() {
     // Arrow raycaster
     arrowRaycaster = new THREE.Raycaster();
 
+    // ======================== Add geometry to scene ========================
+
     // Create a subdivided plane for the ground
     let groundGeometry = new THREE.PlaneGeometry(2000, 2000);
     groundGeometry.rotateX(-Math.PI / 2);
-    //
+
     // // Randomly displace all the vertices on the plane to create texture
     // // Select position buffer of all vertex positions in plane
     // let position = groundGeometry.attributes.position;
@@ -164,12 +197,11 @@ function init() {
     // }
     //
     // groundGeometry.setAttribute('color', new THREE.Float32BufferAttribute(groundColors, 3));
-    const groundMaterial = new THREE.MeshLambertMaterial({color: GROUND_COLOR});
 
+    const groundMaterial = new THREE.MeshLambertMaterial({color: GROUND_COLOR});
     // Add ground to scene
     const ground = new THREE.Mesh(groundGeometry, groundMaterial);
     ground.receiveShadow = true;
-    ground.castShadow = true;
     scene.add(ground);
 
     // Add box
@@ -181,6 +213,25 @@ function init() {
     cubeMesh.position.set(3, 2, 3);
     scene.add(cubeMesh);
     targets.push(cubeMesh);
+
+    const pmremGenerator = new THREE.PMREMGenerator(renderer);
+    pmremGenerator.compileCubemapShader();
+    const envMapTarget = pmremGenerator.fromScene(scene);
+
+    activeCube = new THREE.Mesh(
+        new THREE.IcosahedronGeometry(1, 2),
+        new THREE.MeshStandardMaterial({
+            color: '#ff00ff',
+            flatShading: true,
+            metalness: 0.7,
+            roughness: 0,
+            envMap: envMapTarget.texture
+        })
+    )
+    activeCube.castShadow = true;
+    activeCube.position.set(-3, 2, -3);
+
+    scene.add(activeCube);
 
     // TODO: Load tree models
     // CommonTree_Autumn_1.blend -5
@@ -202,26 +253,11 @@ function init() {
             console.error(error);
         });
     }
-
-
-    // Init renderer
-    renderer = new THREE.WebGLRenderer({antialias: true});
-    renderer.shadowMap.enabled = true;
-    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-    renderer.setPixelRatio(window.devicePixelRatio);
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.domElement.id = "gl-canvas";
-    document.body.appendChild(renderer.domElement);
-
-    stats = new Stats();
-    document.body.appendChild(stats.dom);
-
-    window.addEventListener('resize', onWindowResize);
-    window.addEventListener('mousedown', onMouseDown);
 }
 
 // Fire arrow
-function onMouseDown(event) {
+function onMouseDown() {
+    if (paused) return;
     const tempVec = new THREE.Vector3();
     arrowRaycaster.set(camera.position, controls.getDirection(tempVec));
 
@@ -237,6 +273,7 @@ function onMouseDown(event) {
 
 // Add movement control listeners
 function onKeyDown(event) {
+    if (paused) return;
     switch (event.code) {
         case 'ArrowUp':
         case 'KeyW':
@@ -266,6 +303,7 @@ function onKeyDown(event) {
 }
 
 function onKeyUp(event) {
+    if (paused) return;
     switch (event.code) {
         case 'ArrowUp':
         case 'KeyW':
@@ -297,6 +335,7 @@ function onWindowResize() {
 }
 
 function animate() {
+    if (paused) return;
     requestAnimationFrame(animate);
 
     // Physics are based on PointerLockControls example
@@ -341,6 +380,8 @@ function animate() {
             canJump = true;
         }
     }
+
+    activeCube.rotation.y += 0.01;
 
     renderer.render(scene, camera);
 
