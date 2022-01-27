@@ -23,6 +23,7 @@ body {
     overflow: hidden;
     color: white;
     font-family: Alegreya, sans-serif;
+    user-select: none;
 }
 
 #blocker {
