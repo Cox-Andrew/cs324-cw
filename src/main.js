@@ -1,9 +1,8 @@
 import * as THREE from '../three/build/three.module.js';
-import {PointerLockControls} from './PointerLockControlsFix.js';
 import Stats from '../three/examples/jsm/libs/stats.module.js';
 import {GLTFLoader} from '../three/examples/jsm/loaders/GLTFLoader.js';
 import * as CANNON from '../cannon-es-0.19.0/dist/cannon-es.js';
-import {PointerLockControlsCannon} from "../cannon-es-0.19.0/examples/js/PointerLockControlsCannon.js";
+import {PointerLockControlsArtemis} from "./PointerLockControlsArtemis.js";
 
 const CAMERA_FOV = 70;
 const CAMERA_NEAR = 0.1;
@@ -23,7 +22,10 @@ const SUN_COLOR = '#fdfbd3';
 const SUN_INTENSITY = 1;
 const SUN_FAR = 1000;
 
-const PLAYER_HEIGHT = 2;
+const MOVE_VELOCITY = 5;
+const JUMP_VELOCITY = 5;
+const PLAYER_HEIGHT = 1.8;
+const GRAVITY = new CANNON.Vec3(0, -12, 0);
 const PHYS_TICK_RATE = 60;
 
 let camera, scene, renderer, controls, stats, arrowRaycaster, clock, world, playerBody, activeCube;
@@ -40,13 +42,9 @@ function init() {
     clock = new THREE.Clock(false);
 
     // Initialise physics world
-    world = new CANNON.World({
-        gravity: new CANNON.Vec3(0, - 9.8, 0),
-    })
+    world = new CANNON.World({gravity: GRAVITY});
 
     const solver = new CANNON.GSSolver();
-    solver.iterations = 7;
-    solver.tolerance = 0.01;
     world.solver = new CANNON.SplitSolver(solver);
 
     // Setup camera
@@ -120,37 +118,27 @@ function init() {
     // // TODO: check - think this just adds camera, getObject is depreciated
     // scene.add(controls.getObject());
 
-    world.defaultContactMaterial.contactEquationStiffness = 1e9;
-    world.defaultContactMaterial.contactEquationRelaxation = 4;
+    world.defaultContactMaterial.friction = 0.0;
     world.broadphase.useBoundingBoxes = true;
 
-    const physicsMat = new CANNON.Material();
-    const matContact = new CANNON.ContactMaterial(physicsMat, physicsMat, {
-       friction: 0.0,
-       restitution: 0.3,
-    });
-    world.addContactMaterial(matContact);
-
-    const playerShape = new CANNON.Sphere(1);
+    const playerShape = new CANNON.Sphere(PLAYER_HEIGHT / 2);
     playerBody = new CANNON.Body({
-        mass: 5,
-        material: physicsMat,
+        mass: 50,
+        position: new CANNON.Vec3(0, PLAYER_HEIGHT / 2, 0),
     });
     playerBody.addShape(playerShape);
-    playerBody.linearDamping = 0.9;
     world.addBody(playerBody);
 
     // Create the ground physics
     const groundShape = new CANNON.Plane();
     const groundBody = new CANNON.Body({
         type: CANNON.BODY_TYPES.STATIC,
-        material: physicsMat,
     });
     groundBody.addShape(groundShape);
     groundBody.quaternion.setFromEuler(-Math.PI / 2, 0, 0);
     world.addBody(groundBody);
 
-    controls = new PointerLockControlsCannon(camera, playerBody);
+    controls = new PointerLockControlsArtemis(camera, playerBody, MOVE_VELOCITY, JUMP_VELOCITY, PLAYER_HEIGHT);
     scene.add(controls.getObject());
 
     // Setup overlay controls and pointer capture events
@@ -302,6 +290,7 @@ function init() {
 }
 
 // Fire arrow
+// FIXME getDirection not a property of pointercontrols write own
 function onMouseDown() {
     if (!controls.enabled) return;
     const tempVec = new THREE.Vector3();
