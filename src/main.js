@@ -308,7 +308,7 @@ function onMouseDown() {
     let target = intersects[0].object;
     target.visible = false;
     score++;
-    document.getElementById('score').innerText = score;
+    document.getElementById('score').innerText = score.toString();
   }
 }
 
