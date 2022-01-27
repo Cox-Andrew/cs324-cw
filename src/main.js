@@ -297,11 +297,10 @@ function init() {
 }
 
 // Fire arrow
-// FIXME getDirection not a property of pointercontrols write own
 function onMouseDown() {
   if (!controls.enabled) return;
-  const tempVec = new THREE.Vector3();
-  arrowRaycaster.set(camera.position, controls.getDirection(tempVec));
+
+  arrowRaycaster.set(camera.position, controls.getDirection());
 
   const intersects = arrowRaycaster.intersectObjects(targets, false);
 

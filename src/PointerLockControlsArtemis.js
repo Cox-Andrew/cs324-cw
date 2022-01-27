@@ -186,7 +186,7 @@ class PointerLockControlsArtemis extends THREE.EventDispatcher {
   }
 
   getDirection() {
-    const vector = new CANNON.Vec3(0, 0, -1);
+    const vector = new THREE.Vector3(0, 0, -1);
     vector.applyQuaternion(this.quaternion);
     return vector;
   }
