@@ -8,21 +8,20 @@
 - exit logo
   - https://www.svgrepo.com/svg/384339/back-entrance-exit-logout-quit
   - [Hasyim Ari](https://www.behance.net/_hasyimasari/)
-
 - fonts
   - https://en.bestfonts.pro/font/persephone-&-hades
   - https://www.1001fonts.com/alegreya-sans-font.html
   - https://www.1001fonts.com/caesar-dressing-font.html
-
 - rock models
   - https://assetstore.unity.com/packages/3d/props/exterior/rock-and-boulders-2-6947
-
 - conifers
   - https://assetstore.unity.com/packages/3d/vegetation/trees/conifers-botd-142076
-
 - unity standard assets https://assetstore.unity.com/packages/essentials/asset-packs/standard-assets-for-unity-2018-4-32351
 - cannon-es (fork of cannon.js) - a three.js inspired physics engine based on ammo.js and the Bullet engine
   - https://github.com/pmndrs/cannon-es
+- bow design based on
+  - https://www.cadnav.com/3d-models/model-45714.html
+
 
 
 ## Specification
@@ -88,3 +87,16 @@
 ## Modelling
 
 ![image-20220123193630963](C:\Users\valsp\source\repos\cs324-cw\images\image-20220123193630963.png)
+
+![image-20220125105957450](C:\Users\valsp\source\repos\cs324-cw\images\image-20220125105957450.png)
+
+![image-20220125110011858](C:\Users\valsp\source\repos\cs324-cw\images\image-20220125110011858.png)
+
+![image-20220125110444596](C:\Users\valsp\source\repos\cs324-cw\images\image-20220125110444596.png)
+
+![image-20220127002840086](C:\Users\valsp\source\repos\cs324-cw\images\image-20220127002840086.png)
+
+![image-20220127070514073](C:\Users\valsp\source\repos\cs324-cw\images\image-20220127070514073.png)
+
+![image-20220127100725409](C:\Users\valsp\source\repos\cs324-cw\images\image-20220127100725409.png)
+
