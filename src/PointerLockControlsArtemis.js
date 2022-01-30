@@ -1,6 +1,8 @@
 import * as THREE from '../three/build/three.module.js';
 import * as CANNON from '../cannon-es-0.19.0/dist/cannon-es.js';
 
+const FIX = true;
+
 /**
  * @author Cox-Andrew
  * @author mrdoob / http://mrdoob.com/
@@ -65,6 +67,12 @@ class PointerLockControlsArtemis extends THREE.EventDispatcher {
     this.lockEvent = {type: 'lock'};
     this.unlockEvent = {type: 'unlock'};
 
+    // Fix code
+    if (FIX) {
+      this.prevMoveX = Number.POSITIVE_INFINITY;
+      this.prevMoveY = Number.POSITIVE_INFINITY;
+    }
+
     this.connect();
   }
 
@@ -117,7 +125,24 @@ class PointerLockControlsArtemis extends THREE.EventDispatcher {
       return;
     }
 
-    const {movementX, movementY} = event;
+    let {movementX, movementY} = event;
+
+    if (FIX) {
+      if (movementX > 100 || movementX < -100) console.log("x: " + movementX);
+      if (movementY > 100 || movementY < -100) console.log("y: " + movementY);
+
+      let temp = movementX;
+      if (Math.abs(movementX) > Math.abs(this.prevMoveX) * 1.5) {
+        movementX = this.prevMoveX;
+      }
+      this.prevMoveX = temp;
+
+      temp = movementY;
+      if (Math.abs(movementY) > Math.abs(this.prevMoveY) * 1.2) {
+        movementY = this.prevMoveY;
+      }
+      this.prevMoveY = temp;
+    }
 
     this.yawObject.rotation.y -= movementX * 0.001;
     this.pitchObject.rotation.x -= movementY * 0.001;
