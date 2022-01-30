@@ -26,10 +26,12 @@ const MOVE_VELOCITY = 5;
 const JUMP_VELOCITY = 5;
 const PLAYER_HEIGHT = 1.8;
 const GRAVITY = new CANNON.Vec3(0, -12, 0);
-const PHYS_TICK_RATE = 60;
+const PHYS_TICK_RATE = 144;
 
 let camera, scene, renderer, controls, stats, arrowRaycaster, clock, world,
-    playerBody, activeCube;
+    playerBody;
+
+let activeCube, bow;
 
 const targets = [];
 
@@ -272,28 +274,17 @@ function init() {
 
   scene.add(activeCube);
 
-  // TODO: Load tree models
-  // CommonTree_Autumn_1.blend -5
-  // BirchTree_Autumn_1.blend -5
-  // Willow_Autumn_1.blend -5
-  // PineTree_1.blend -5
-
   const loader = new GLTFLoader();
-  for (let i = 1; i <= 5; i++) {
-    loader.load(`../resources/low-poly-nature/CommonTree_Autumn_${i}.blend.glb`,
-        (gltf) => {
-          gltf.scene.rotateY(Math.random() * 2 * Math.PI);
-          gltf.scene.scale.multiplyScalar(3);
-          gltf.scene.traverse((node) => {
-            if (node.isMesh) node.castShadow = true;
-          });
-          gltf.scene.translateOnAxis(
-              new THREE.Vector3(Math.random(), 0, Math.random()), 50);
-          scene.add(gltf.scene);
-        }, undefined, (error) => {
-          console.error(error);
-        });
-  }
+
+
+  loader.load("../resources/bow.glb", (gltf) => {
+    gltf.scene.translateOnAxis(new THREE.Vector3(2, 1, 2), 1);
+    scene.add(gltf.scene);
+    bow = scene.getObjectByName("Bow");
+    bow.rotateZ(Math.PI * 3 / 2);
+  }, undefined, (error) => {
+    console.error(error);
+  });
 }
 
 // Fire arrow
@@ -310,6 +301,13 @@ function onMouseDown() {
     score++;
     document.getElementById('score').innerText = score.toString();
   }
+
+  let facing = controls.getDirection();
+  let camPos = controls.yawObject.position;
+  let bowPos = bow.position;
+  console.log("facing " + facing.x + "," + facing.y + "," + facing.z);
+  console.log("camera " + camPos.x + "," + camPos.y + "," + camPos.z);
+  console.log("bow " + bowPos.x + "," + bowPos.y + "," + bowPos.z);
 }
 
 function onWindowResize() {
@@ -318,6 +316,8 @@ function onWindowResize() {
 
   renderer.setSize(window.innerWidth, window.innerHeight);
 }
+
+let offset = new THREE.Vector3(-0.5, 0, -1);
 
 function animate() {
   if (!controls.enabled) return;
