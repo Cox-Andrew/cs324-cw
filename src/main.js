@@ -29,12 +29,9 @@ const GRAVITY = new CANNON.Vec3(0, -12, 0);
 const PHYS_TICK_RATE = 144;
 
 let camera, scene, renderer, controls, stats, arrowRaycaster, clock, world,
-    playerBody;
-
-let activeCube, bow;
+  playerBody, activeCube, bow;
 
 const targets = [];
-
 let score = 0;
 
 init();
@@ -52,12 +49,15 @@ function init() {
 
   // Setup camera
   camera = new THREE.PerspectiveCamera(CAMERA_FOV,
-      window.innerWidth / window.innerHeight, CAMERA_NEAR, CAMERA_FAR);
+    window.innerWidth / window.innerHeight, CAMERA_NEAR, CAMERA_FAR);
   camera.position.y = PLAYER_HEIGHT;
 
   // Setup scene
   scene = new THREE.Scene();
   scene.fog = new THREE.Fog(FOG_COLOR, FOG_NEAR, FOG_FAR);
+  let axisHelper = new THREE.AxisHelper(5);
+  axisHelper.translateY(2);
+  scene.add(axisHelper);
 
   let skyboxURLs = [
     '../resources/skybox/east.bmp',
@@ -88,12 +88,12 @@ function init() {
   // Add light sources
   // Position of hemisphereLight is irrelevant - only +/- the axis affects ground vs sky
   const hemisphereLight = new THREE.HemisphereLight(HEM_SKY_COLOR,
-      HEM_GROUND_COLOR, HEM_INTENSITY);
+    HEM_GROUND_COLOR, HEM_INTENSITY);
   hemisphereLight.position.set(0, 2, 0);
   scene.add(hemisphereLight);
 
   const hemisphereLightHelper = new THREE.HemisphereLightHelper(
-      hemisphereLight);
+    hemisphereLight);
   scene.add(hemisphereLightHelper);
 
   // Direction affects shadow direction, position affects centre of shadow map => where it gets clipped
@@ -145,7 +145,7 @@ function init() {
   world.addBody(groundBody);
 
   controls = new PointerLockControlsArtemis(camera, playerBody, MOVE_VELOCITY,
-      JUMP_VELOCITY, PLAYER_HEIGHT);
+    JUMP_VELOCITY, PLAYER_HEIGHT);
   scene.add(controls.getObject());
 
   // Setup overlay controls and pointer capture events
@@ -156,24 +156,24 @@ function init() {
   const overlay = document.getElementById('overlay');
 
   document.getElementById('start').addEventListener(
-      'click', () => {
-        splash.style.display = 'none';
-        levelSelect.style.display = 'flex';
-      });
+    'click', () => {
+      splash.style.display = 'none';
+      levelSelect.style.display = 'flex';
+    });
   document.getElementById('forest').addEventListener(
-      'click', () => controls.lock(),
+    'click', () => controls.lock(),
   );
   document.getElementById('desert').addEventListener(
-      'click', () => controls.lock(),
+    'click', () => controls.lock(),
   );
   document.getElementById('resume').addEventListener(
-      'click', () => controls.lock(),
+    'click', () => controls.lock(),
   );
   document.getElementById('return').addEventListener(
-      'click', () => {
-        pauseMenu.style.display = 'none';
-        levelSelect.style.display = 'flex';
-      });
+    'click', () => {
+      pauseMenu.style.display = 'none';
+      levelSelect.style.display = 'flex';
+    });
 
   controls.addEventListener('lock', () => {
     controls.enabled = true;
@@ -260,14 +260,14 @@ function init() {
   const envMapTarget = pmremGenerator.fromScene(scene);
 
   activeCube = new THREE.Mesh(
-      new THREE.IcosahedronGeometry(1, 2),
-      new THREE.MeshStandardMaterial({
-        color: '#ff00ff',
-        flatShading: true,
-        metalness: 0.7,
-        roughness: 0,
-        envMap: envMapTarget.texture,
-      }),
+    new THREE.IcosahedronGeometry(1, 2),
+    new THREE.MeshStandardMaterial({
+      color: '#ff00ff',
+      flatShading: true,
+      metalness: 0.7,
+      roughness: 0,
+      envMap: envMapTarget.texture,
+    }),
   );
   activeCube.castShadow = true;
   activeCube.position.set(-3, 2, -3);
@@ -276,38 +276,49 @@ function init() {
 
   const loader = new GLTFLoader();
 
-
-  loader.load("../resources/bow.glb", (gltf) => {
-    gltf.scene.translateOnAxis(new THREE.Vector3(2, 1, 2), 1);
-    scene.add(gltf.scene);
-    bow = scene.getObjectByName("Bow");
-    bow.rotateZ(Math.PI * 3 / 2);
+  // The bow's transformations are all carried out in local object space hence weird coordinates
+  loader.load('../resources/bow.glb', (gltf) => {
+    bow = gltf.scene.getObjectByName('Bow');
+    bow.receiveShadow = true;
+    camera.add(bow);
+    bow.translateOnAxis(new THREE.Vector3(-0.5, -1, 0.3), 1);
+    bow.rotateZ(Math.PI);
   }, undefined, (error) => {
     console.error(error);
   });
 }
 
-// Fire arrow
-function onMouseDown() {
+function onMouseDown(e) {
   if (!controls.enabled) return;
 
-  arrowRaycaster.set(camera.position, controls.getDirection());
+  switch (e.button) {
+    case 0:
+      // Left click
+      fireArrow();
+      return;
+    default:
+      return;
+  }
+}
+
+// Fire arrow
+function fireArrow() {
+  arrowRaycaster.set(controls.yawObject.position, controls.getDirection());
 
   const intersects = arrowRaycaster.intersectObjects(targets, false);
 
   if (intersects.length > 0) {
-    let target = intersects[0].object;
-    target.visible = false;
-    score++;
-    document.getElementById('score').innerText = score.toString();
-  }
+    let target;
+    for (let i = 0; i < intersects.length; i++) {
+      target = intersects[0].object;
+      if (!target.visible) continue;
 
-  let facing = controls.getDirection();
-  let camPos = controls.yawObject.position;
-  let bowPos = bow.position;
-  console.log("facing " + facing.x + "," + facing.y + "," + facing.z);
-  console.log("camera " + camPos.x + "," + camPos.y + "," + camPos.z);
-  console.log("bow " + bowPos.x + "," + bowPos.y + "," + bowPos.z);
+      target.visible = false;
+      score++;
+      document.getElementById('score').innerText = score.toString();
+      return;
+    }
+  }
 }
 
 function onWindowResize() {
@@ -316,8 +327,6 @@ function onWindowResize() {
 
   renderer.setSize(window.innerWidth, window.innerHeight);
 }
-
-let offset = new THREE.Vector3(-0.5, 0, -1);
 
 function animate() {
   if (!controls.enabled) return;
