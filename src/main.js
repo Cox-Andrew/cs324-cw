@@ -14,11 +14,11 @@ const FOG_FAR = 800;
 
 const HEM_SKY_COLOR = '#bde6ff';
 const HEM_GROUND_COLOR = '#82aa14';
-const HEM_INTENSITY = 0.8;
+const HEM_INTENSITY = 0.5;
 
 const GROUND_COLOR = '#82aa14';
 
-const SUN_COLOR = '#fdfbd3';
+const SUN_COLOR = '#ff6918';
 const SUN_INTENSITY = 1;
 const SUN_FAR = 1000;
 
@@ -28,11 +28,20 @@ const PLAYER_HEIGHT = 1.8;
 const GRAVITY = new CANNON.Vec3(0, -12, 0);
 const PHYS_TICK_RATE = 144;
 
+const BOW_ZOOM = 2;
+const BOW_FOV = CAMERA_FOV / BOW_ZOOM;
+const BOW_POS_IDLE = new THREE.Vector3(0, -0.4, -1.1);
+const BOW_EULER_IDLE = new THREE.Euler(Math.PI / 2 + 0.2, -1.4, Math.PI);
+const BOW_POS_SCOPED = new THREE.Vector3(0.1, -0.1, -1.1);
+const BOW_EULER_SCOPED = new THREE.Euler(Math.PI / 2 + 0.2, 0, Math.PI);
+
 let camera, scene, renderer, controls, stats, arrowRaycaster, clock, world,
   playerBody, activeCube, bow;
 
 const targets = [];
 let score = 0;
+let scoped = false;
+let scopeTransition = false;
 
 init();
 animate();
@@ -55,9 +64,9 @@ function init() {
   // Setup scene
   scene = new THREE.Scene();
   scene.fog = new THREE.Fog(FOG_COLOR, FOG_NEAR, FOG_FAR);
-  let axisHelper = new THREE.AxisHelper(5);
-  axisHelper.translateY(2);
-  scene.add(axisHelper);
+  let axesHelper = new THREE.AxesHelper(5);
+  axesHelper.translateY(2);
+  scene.add(axesHelper);
 
   let skyboxURLs = [
     '../resources/skybox/east.bmp',
@@ -99,7 +108,7 @@ function init() {
   // Direction affects shadow direction, position affects centre of shadow map => where it gets clipped
   const sunLight = new THREE.DirectionalLight(SUN_COLOR, SUN_INTENSITY);
   sunLight.position.set(1, 0.75, 0.6);
-  sunLight.position.multiplyScalar(5);
+  sunLight.position.multiplyScalar(50);
   scene.add(sunLight);
 
   sunLight.castShadow = true;
@@ -277,12 +286,12 @@ function init() {
   const loader = new GLTFLoader();
 
   // The bow's transformations are all carried out in local object space hence weird coordinates
-  loader.load('../resources/bow.glb', (gltf) => {
+  loader.load('../resources/bow/bow.glb', (gltf) => {
     bow = gltf.scene.getObjectByName('Bow');
     bow.receiveShadow = true;
     camera.add(bow);
-    bow.translateOnAxis(new THREE.Vector3(-0.5, -1, 0.3), 1);
-    bow.rotateZ(Math.PI);
+    bow.position.copy(BOW_POS_IDLE);
+    bow.setRotationFromEuler(BOW_EULER_IDLE);
   }, undefined, (error) => {
     console.error(error);
   });
@@ -295,6 +304,10 @@ function onMouseDown(e) {
     case 0:
       // Left click
       fireArrow();
+      return;
+    case 2:
+      // Right click
+      toggleScope();
       return;
     default:
       return;
@@ -321,6 +334,24 @@ function fireArrow() {
   }
 }
 
+function toggleScope() {
+  scoped = !scoped;
+  scopeTransition = true;
+  if (scoped) {
+    bow.position.copy(BOW_POS_SCOPED);
+    bow.setRotationFromEuler(BOW_EULER_SCOPED);
+
+    // camera.fov = BOW_FOV;
+    controls.sensitivity /= BOW_ZOOM;
+  } else {
+    bow.position.copy(BOW_POS_IDLE);
+    bow.setRotationFromEuler(BOW_EULER_IDLE);
+
+    // camera.fov = CAMERA_FOV;
+    controls.sensitivity *= BOW_ZOOM;
+  }
+}
+
 function onWindowResize() {
   camera.aspect = window.innerWidth / window.innerHeight;
   camera.updateProjectionMatrix();
@@ -338,11 +369,31 @@ function animate() {
   // 60Hz tick rate, use clock as it allows us to pause on menu
   world.step(1 / PHYS_TICK_RATE, delta);
 
+  if (scopeTransition) {
+    if (scoped) {
+      if (camera.fov <= BOW_FOV) {
+        camera.fov = BOW_FOV;
+        scopeTransition = false;
+      } else {
+        camera.fov -= delta * 200;
+      }
+    } else {
+      if (camera.fov >= CAMERA_FOV) {
+        camera.fov = CAMERA_FOV;
+        scopeTransition = false;
+      } else {
+        camera.fov += delta * 200;
+      }
+    }
+
+    camera.updateProjectionMatrix();
+  }
+
   // TODO: remove this
   // Rotating icosahedron to show active render
   activeCube.rotation.y += 0.01;
 
-  controls.update(delta);
+  controls.update();
 
   renderer.render(scene, camera);
 
