@@ -10,7 +10,7 @@ const FIX = true;
  */
 class PointerLockControlsArtemis extends THREE.EventDispatcher {
   constructor(
-      camera, cannonBody, moveVelocity = 20, jumpVelocity = 20, eyeYPos = 2) {
+      camera, cannonBody, moveVelocity = 20, jumpVelocity = 20, eyeYPos = 2, sensitivity = 1) {
     super();
 
     this.enabled = false;
@@ -35,6 +35,8 @@ class PointerLockControlsArtemis extends THREE.EventDispatcher {
     this.moveRight = false;
 
     this.canJump = false;
+
+    this.sensitivity = sensitivity;
 
     const contactNormal = new CANNON.Vec3(); // Normal in the contact, pointing *out* of whatever the player touched
     const upAxis = new CANNON.Vec3(0, 1, 0);
@@ -144,8 +146,8 @@ class PointerLockControlsArtemis extends THREE.EventDispatcher {
       this.prevMoveY = temp;
     }
 
-    this.yawObject.rotation.y -= movementX * 0.001;
-    this.pitchObject.rotation.x -= movementY * 0.001;
+    this.yawObject.rotation.y -= movementX * 0.001 * this.sensitivity;
+    this.pitchObject.rotation.x -= movementY * 0.001 * this.sensitivity;
 
     this.pitchObject.rotation.x = Math.max(-Math.PI / 2,
         Math.min(Math.PI / 2, this.pitchObject.rotation.x));
@@ -216,7 +218,7 @@ class PointerLockControlsArtemis extends THREE.EventDispatcher {
     return vector;
   }
 
-  update(delta) {
+  update() {
     if (this.enabled === false) {
       return;
     }
